@@ -67,3 +67,9 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest
 ```
+
+The [model release smoke test](https://github.com/vivalerievich/house-prices/actions/workflows/model-smoke.yml)
+runs on release publication and can be run manually for a published tag. It
+loads the released model with the tagged code and checks the synthetic example
+against the contract in `tests/release/<tag>/`. Add that tag's
+`schema.json` and `expected-output.json` before publishing a new model release.
