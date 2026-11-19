@@ -1,3 +1,4 @@
+import io
 import json
 
 import joblib
@@ -12,6 +13,7 @@ from house_prices.features import (
     build_engineered_pipeline,
     select_categorical,
 )
+from house_prices.predict import main as predict_main
 
 
 @pytest.fixture
@@ -106,5 +108,24 @@ def test_cli_trains_and_saves_pipeline_using_local_csv(sales, tmp_path, capsys):
 
     model = joblib.load(model_path)
     assert not {"Id", "SalePrice"}.intersection(model.feature_names_in_)
-    price = model.predict(sales.drop(columns=["Id", "SalePrice"]).iloc[:1])[0]
-    assert np.isfinite(price) and price > 0
+    features = sales.drop(columns="SalePrice").iloc[:2]
+    input_path = tmp_path / "input.csv"
+    columns = list(reversed(features.columns))
+    features.loc[:, columns].assign(Unused=1).to_csv(input_path, index=False)
+
+    assert predict_main(["--model", str(model_path), "--data", str(input_path)]) == 0
+
+    predictions = pd.read_csv(io.StringIO(capsys.readouterr().out))
+    assert predictions.columns.tolist() == ["Id", "SalePrice"]
+    assert predictions["Id"].tolist() == features["Id"].tolist()
+    np.testing.assert_allclose(
+        predictions["SalePrice"],
+        model.predict(features.loc[:, model.feature_names_in_]),
+    )
+    assert predictions["SalePrice"].gt(0).all()
+
+    features.drop(columns="Neighborhood").to_csv(input_path, index=False)
+    with pytest.raises(SystemExit) as error:
+        predict_main(["--model", str(model_path), "--data", str(input_path)])
+    assert error.value.code == 2
+    assert "Missing required columns: Neighborhood" in capsys.readouterr().err

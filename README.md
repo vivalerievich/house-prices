@@ -1,6 +1,23 @@
 # House Prices
 
-Predict Ames, Iowa home sale prices from property characteristics. The training CLI evaluates a median baseline and reproduces the CatBoost model selected in the [exploration notebook](notebooks/house-prices.ipynb).
+[![CI](https://github.com/vivalerievich/house-prices/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vivalerievich/house-prices/actions/workflows/ci.yml)
+
+**Task** Predict Ames, Iowa home sale prices from property characteristics.
+
+**Result** CatBoost achieves a holdout RMSLE of **0.1304**. The median baseline scores **0.4323** on the same split.
+
+**Main limitation** The evaluation uses a random split of historical Ames sales. Performance in later periods and other markets remains untested.
+
+## Predict with the released model
+
+Check out the tag shown on the [model release](https://github.com/vivalerievich/house-prices/releases/latest). Download `house-prices.joblib` and the synthetic `sample-input.csv` from its assets into `artifacts/`.
+
+```bash
+uv sync --locked --no-dev --python 3.14
+uv run --no-sync house-prices-predict --model artifacts/house-prices.joblib --data artifacts/sample-input.csv
+```
+
+The model takes a CSV with the same columns as Kaggle's `test.csv` and writes `Id,SalePrice` to stdout, with predictions in US dollars. The released pipeline includes preprocessing and was fitted on the 1,168 training rows used for the holdout result. It runs on CPU and needs no training data for inference.
 
 ## Data and setup
 

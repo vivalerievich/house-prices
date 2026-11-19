@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 house-prices = "house_prices.cli:main"
+house-prices-predict = "house_prices.predict:main"
 
 [build-system]
 requires = ["hatchling==1.27.0"]
